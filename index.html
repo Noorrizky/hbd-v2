@@ -1,121 +1,144 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>A Warm Journey for You</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/typewriter-effect@latest/dist/core.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,500&family=Dancing+Script:wght@500&display=swap');
-        
-        body { 
-            font-family: 'Plus Jakarta Sans', sans-serif; 
-            background-color: #FDFBF7; 
-            color: #4A3F35;
+        @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,500&family=Dancing+Script:wght@500&display=swap");
+
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: #fdfbf7;
+            color: #4a3f35;
             scroll-behavior: smooth;
+            overflow-x: hidden;
         }
-        .serif { font-family: 'Playfair Display', serif; }
-        .handwriting { font-family: 'Dancing Script', cursive; }
-        
-        /* Stacking & Timeline */
+        .serif { font-family: "Playfair Display", serif; }
+        .handwriting { font-family: "Dancing Script", cursive; }
+
+        /* Stacking Logic */
         .photo-card {
             position: sticky;
-            top: 10vh;
+            top: 15vh;
             width: 100%;
-            max-width: 450px;
-            margin-bottom: 20vh;
+            max-width: 400px;
+            margin-bottom: 25vh;
+            perspective: 1000px;
         }
         .photo-inner {
             background: #fff;
-            padding: 12px 12px 50px 12px;
-            box-shadow: 0 10px 30px rgba(74, 63, 53, 0.1);
-            transform: rotate(var(--rotation));
+            padding: 12px 12px 60px 12px;
+            box-shadow: 0 10px 40px rgba(74, 63, 53, 0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.5s ease;
         }
 
-        /* Envelope Effect */
-        .envelope-wrapper { cursor: pointer; perspective: 1000px; }
+        /* Envelope Logic */
+        .envelope-wrapper { cursor: pointer; perspective: 1000px; position: relative; width: 300px; margin: 0 auto; }
         .envelope {
             position: relative;
             width: 300px; height: 200px;
-            background: #EAE3D9;
-            transition: transform 0.8s;
-            transform-style: preserve-3d;
+            background: #eae3d9;
             margin: 0 auto;
+            z-index: 10;
         }
-        .envelope.open { transform: rotateX(-20deg) translateY(50px); }
+        .envelope::before {
+            content: '';
+            position: absolute; top: 0; z-index: 20;
+            border-top: 100px solid rgba(255,255,255,0.2);
+            border-left: 150px solid transparent; border-right: 150px solid transparent;
+        }
         .letter {
             position: absolute;
-            bottom: 0; left: 10px; right: 10px;
+            bottom: 5px; left: 10px; right: 10px;
             background: white;
-            padding: 20px;
-            height: 0;
-            overflow: hidden;
-            transition: all 0.8s 0.2s;
-            z-index: -1;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            height: 80%;
+            z-index: 5;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            opacity: 0;
         }
-        .envelope.open .letter { height: 350px; bottom: 100px; }
+        .envelope.open .letter {
+            transform: translateY(-180px);
+            height: 380px;
+            opacity: 1;
+            z-index: 25;
+        }
 
         canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
+
+        /* Candle & Flame */
+        .candle-container { position: relative; width: 100px; height: 120px; margin: 50px auto; cursor: pointer; }
+        .flame {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 16px; height: 26px; background: #ff9800;
+            border-radius: 50% 50% 20% 20%; box-shadow: 0 0 20px #ff9800;
+            animation: flicker 0.1s infinite alternate;
+        }
+        .flame.off { display: none; }
+        @keyframes flicker {
+            from { transform: translateX(-50%) scale(1); }
+            to { transform: translateX(-50%) scale(1.1) rotate(2deg); }
+        }
+        .candle {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 14px; height: 70px; background: #eae3d9; border-bottom: 4px solid #4a3f35;
+        }
+        .confetti { position: fixed; width: 8px; height: 8px; z-index: 1000; pointer-events: none; }
     </style>
 </head>
 <body>
-
     <canvas id="particleCanvas"></canvas>
 
     <main class="h-screen flex flex-col items-center justify-center px-6 text-center">
         <div id="typewriter" class="serif text-2xl md:text-3xl italic text-[#5D4E40] min-h-[4rem]"></div>
-        <button onclick="revealSurprise()" id="surpriseBtn" class="mt-12 px-10 py-3 border border-[#4A3F35]/20 hover:bg-[#4A3F35] hover:text-[#FDFBF7] transition-all duration-700 rounded-full tracking-[0.2em] text-xs uppercase">
+        <button onclick="revealSurprise()" id="surpriseBtn" class="mt-12 px-10 py-3 border border-[#4A3F35]/20 hover:bg-[#4A3F35] hover:text-[#FDFBF7] transition-all duration-700 rounded-full tracking-[0.2em] text-xs uppercase font-medium">
             Mulai Perjalanan
         </button>
     </main>
 
     <section id="surpriseArea" class="hidden">
-        
         <div class="max-w-4xl mx-auto py-20 flex flex-col items-center">
-            
             <div class="text-center mb-32">
                 <h2 class="serif text-4xl text-[#5D4E40]">Moments & Milestones</h2>
-                <p class="opacity-60 mt-4 italic">Gulir perlahan.</p>
+                <p class="opacity-60 mt-4 italic">Gulir perlahan untuk membuka kenangan.</p>
             </div>
 
-            <div class="photo-card" style="--rotation: -3deg;">
-                <div class="photo-inner">
-                    <img src="foto_1.png" class="w-full h-[400px] object-cover mb-4">
-                    <span class="text-xs uppercase tracking-widest opacity-50">2026</span>
+            <div class="photo-card">
+                <div class="photo-inner" style="transform: rotate(-3deg)">
+                    <img src="foto_1.png" class="w-full h-[350px] object-cover mb-4 shadow-inner" />
+                    <span class="text-[10px] uppercase tracking-[0.3em] opacity-40">2026</span>
                     <p class="serif text-lg mt-1 italic">Selamat Ulang Tahun!</p>
                 </div>
             </div>
 
-            <div class="photo-card" style="--rotation: 2deg;">
-                <div class="photo-inner">
-                    <img src="foto_2.png" class="w-full h-[400px] object-cover mb-4">
+            <div class="photo-card">
+                <div class="photo-inner" style="transform: rotate(4deg)">
+                    <img src="foto_2.png" class="w-full h-[350px] object-cover mb-4" />
                     <p class="serif text-lg mt-1 italic">Semoga apa yang diharapkan terwujud.</p>
                 </div>
             </div>
 
-            <div class="photo-card" style="--rotation: -1deg;">
-                <div class="photo-inner">
-                    <img src="foto_3.png" class="w-full h-[400px] object-cover mb-4">
-                    <span class="text-xs uppercase tracking-widest opacity-50">2026</span>
+            <div class="photo-card">
+                <div class="photo-inner" style="transform: rotate(-2deg)">
+                    <img src="foto_3.png" class="w-full h-[350px] object-cover mb-4" />
+                    <span class="text-[10px] uppercase tracking-[0.3em] opacity-40">With Love</span>
                     <p class="serif text-lg mt-1 italic">Terima kasih sudah bertahan sejauh ini.</p>
                 </div>
             </div>
-
         </div>
 
-
-        <div class="py-40 px-6 text-center">
+        <div class="py-40 px-6 text-center bg-[#f7f4f0]/50">
             <h3 class="serif text-2xl mb-16 text-[#5D4E40]">Satu Pesan Terakhir</h3>
-            
-            <div class="envelope-wrapper" onclick="document.getElementById('env').classList.toggle('open')">
-                <div id="env" class="envelope shadow-xl flex items-center justify-center rounded-b-lg">
-                    <div class="absolute top-0 left-0 w-full h-full border-t-[100px] border-t-white/20 z-10 pointer-events-none"></div>
-                    <i data-lucide="mail" class="w-10 h-10 text-[#4A3F35]/30"></i>
-                    
-                    <div class="letter shadow-inner text-left overflow-y-auto">
+            <div class="envelope-wrapper" id="envelopeTrigger">
+                <div id="env" class="envelope shadow-lg flex items-center justify-center rounded-b-lg">
+                    <i data-lucide="mail" class="w-8 h-8 text-[#4A3F35]/20"></i>
+                    <div class="letter shadow-lg text-left overflow-y-auto rounded-sm">
                         <h4 class="handwriting text-3xl mb-4 text-[#4A3F35]">Untukmu,</h4>
                         <p class="text-sm leading-relaxed text-zinc-600 mb-4">
                             Mungkin kata-kata di layar ini tidak akan pernah cukup untuk menggambarkan betapa berartinya kehadiranmu. 
@@ -128,11 +151,26 @@
                     </div>
                 </div>
             </div>
-            <p class="mt-8 text-xs opacity-40 uppercase tracking-widest">Klik amplop untuk membuka</p>
+            <p class="mt-32 text-[10px] opacity-40 uppercase tracking-[0.3em]">Klik amplop untuk membuka pesan</p>
         </div>
 
-        <footer class="pb-20 text-center opacity-30 text-[10px] tracking-[0.4em] uppercase">
-            Happy Birthday &bull; 2026
+        <section id="candleSection" class="hidden opacity-0 transition-all duration-1000 py-32 text-center">
+            <div class="max-w-md mx-auto">
+                <h3 id="candleInstruction" class="serif text-xl mb-8 text-[#5D4E40] opacity-80">Make a wish and blow the candle...</h3>
+                <div class="candle-container" onclick="blowCandle()">
+                    <div id="flame" class="flame"></div>
+                    <div class="candle"></div>
+                    <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#4a3f35]/5 rounded-full"></div>
+                </div>
+                <div id="finalMessage" class="hidden animate-bounce mt-16">
+                    <h2 class="serif text-3xl text-[#5D4E40]">Happy Birthday! 🎂</h2>
+                    <p class="text-[10px] tracking-[0.4em] uppercase opacity-40 mt-4 underline decoration-1">Always be happy</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="py-20 text-center opacity-30 text-[10px] tracking-[0.4em] uppercase">
+            &bull; 2026 &bull;
         </footer>
     </section>
 
@@ -140,40 +178,105 @@
         lucide.createIcons();
 
         // --- TYPEWRITER ---
-        new Typewriter('#typewriter', {
-            strings: [
-                'Hai, selamat ulang tahun!',
-                'Ada sesuatu untukmu...',
-                'Sebuah rangkuman perjalanan kecil.',
-                'Klik tombol di bawah.',
-            ],
-            autoStart: true, loop: true, delay: 50
+        new Typewriter("#typewriter", {
+            strings: ["Hai, selamat ulang tahun!", "Ada sesuatu untukmu...", "Sebuah rangkuman perjalanan kecil.", "Klik tombol di bawah."],
+            autoStart: true, loop: true, delay: 50,
         });
 
-        // --- REVEAL ---
+        // --- REVEAL SURPRISE ---
         function revealSurprise() {
-            document.getElementById('surpriseArea').classList.remove('hidden');
-            window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+            const area = document.getElementById("surpriseArea");
+            area.classList.remove("hidden");
+            // Scroll sedikit lebih jauh dari viewport height agar transisi smooth
+            window.scrollTo({ top: window.innerHeight + 100, behavior: "smooth" });
+        }
+
+        // --- ENVELOPE LOGIC ---
+        let candleTriggered = false;
+        document.getElementById('envelopeTrigger').addEventListener("click", function () {
+            const env = document.getElementById("env");
+            const candleSec = document.getElementById("candleSection");
+            env.classList.toggle("open");
+
+            if (env.classList.contains("open") && !candleTriggered) {
+                candleTriggered = true; // Agar tidak trigger berkali-kali
+                setTimeout(() => {
+                    candleSec.classList.remove("hidden");
+                    setTimeout(() => {
+                        candleSec.classList.add("opacity-100");
+                        candleSec.scrollIntoView({ behavior: "smooth" });
+                    }, 100);
+                }, 4000); 
+            }
+        });
+
+        // --- CANDLE BLOW ---
+        function blowCandle() {
+            const flame = document.getElementById("flame");
+            const instruction = document.getElementById("candleInstruction");
+            const finalMsg = document.getElementById("finalMessage");
+
+            if (!flame.classList.contains("off")) {
+                flame.classList.add("off");
+                instruction.innerHTML = "Wish granted! <span class='not-italic'>✨</span>";
+                finalMsg.classList.remove("hidden");
+                createConfetti();
+            }
+        }
+
+        // --- CONFETTI ---
+        function createConfetti() {
+            const colors = ["#D4A373", "#E9EDC6", "#4A3F35", "#FAEDCD", "#CCD5AE"];
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement("div");
+                confetti.classList.add("confetti");
+                confetti.style.left = Math.random() * 100 + "vw";
+                confetti.style.top = "-10px";
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.borderRadius = Math.random() > 0.5 ? "50%" : "0%";
+                document.body.appendChild(confetti);
+
+                confetti.animate([
+                    { top: "-10px", opacity: 1, transform: "rotate(0deg)" },
+                    { top: "100vh", opacity: 0, transform: `rotate(${Math.random() * 1000}deg) translateX(${Math.random() * 100}px)` }
+                ], {
+                    duration: Math.random() * 3000 + 2000,
+                    easing: "cubic-bezier(0, .9, .57, 1)"
+                }).onfinish = () => confetti.remove();
+            }
         }
 
         // --- PARTICLES ---
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
+        const canvas = document.getElementById("particleCanvas");
+        const ctx = canvas.getContext("2d");
         let particles = [];
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+
         class Particle {
-            constructor() { 
-                this.x = Math.random() * canvas.width; 
-                this.y = Math.random() * canvas.height; 
-                this.size = Math.random() * 1.2; 
-                this.speedX = Math.random() * 0.2 - 0.1; 
-                this.speedY = Math.random() * 0.2 - 0.1; 
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 1.5;
+                this.speedX = Math.random() * 0.3 - 0.15;
+                this.speedY = Math.random() * 0.3 - 0.15;
             }
-            update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width) this.x = 0; }
-            draw() { ctx.fillStyle = 'rgba(180, 150, 120, 0.2)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0; if (this.y > canvas.height) this.y = 0;
+                if (this.x < 0) this.x = canvas.width; if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = "rgba(180, 150, 120, 0.25)";
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
         }
-        for (let i = 0; i < 40; i++) particles.push(new Particle());
-        function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        for (let i = 0; i < 50; i++) particles.push(new Particle());
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
         animate();
     </script>
 </body>
